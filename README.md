@@ -4,4 +4,7 @@ different. The user has to click on the different letter, to go to next level.
 Games are timed, and there's a leaderboard.  
   
 Button position is chosen at random, and letters fill screen entirely, on  
-any device.
+any device.  
+  
+New Idea  
+Go backend with sockets so users can compete against each other for time.  
