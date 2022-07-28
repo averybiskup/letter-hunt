@@ -2,20 +2,24 @@ package main
 
 import (
 	"fmt"
-	"log"
-  "html"
-	"net/http"
-  )
+  "net"
+  "bufio"
+)
+
+const PORT = 8080
 
 func main() {
-  http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-    })
 
-  http.HandleFunc("/hi", func(w http.ResponseWriter, r *http.Request){
-      fmt.Fprintf(w, "Hi")
-  })
+  fmt.Printf("Starting server on port %d", PORT)
 
-  fmt.Fprintf(w, "Listening")
-	log.Fatal(http.ListenAndServe(":8081", nil))
+  ServePort := fmt.Sprintf(":%d", PORT)
+
+  ln, _ := net.Listen("tcp", ServePort)
+
+  conn, _ := ln.Accept()
+
+  for {
+    message, _ := bufio.NewReader(conn).ReadString('\n')
+    fmt.Print("Message Received:", string(message))
+  }
 }
