@@ -1,45 +1,66 @@
 package main
 
 import (
-	"fmt"
-  "net"
-  "bufio"
+    "fmt"
+    "log"
+    "net/http"
+    "github.com/gorilla/websocket"
 )
 
-const PORT = 8080
-
-func main() {
-
-  fmt.Printf("Starting server on port %d\n", PORT)
-
-  ServePort := fmt.Sprintf(":%d", PORT)
-
-  ln, err := net.Listen("tcp", ServePort)
-
-  if err != nil {
-    fmt.Println(err)
-    return
-  }
-
-  defer ln.Close()
-
-  for {
-    conn, _ := ln.Accept()
-    go handleConnection(conn)
-  }
+func homePage(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "Home Page")
 }
 
-func handleConnection(con net.Conn) {
-  for {
-    data, err := bufio.NewReader(con).ReadString('\n')
+func setupRoutes() {
+    http.HandleFunc("/", homePage)
+    http.HandleFunc("/ws", wsEndpoint)
+}
 
-    if (err != nil) {
-      fmt.Println(err)
-      return
+func main() {
+    fmt.Println("Hello World")
+    setupRoutes()
+    log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+}
+
+func wsEndpoint(w http.ResponseWriter, r *http.Request) {
+    upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+
+    // upgrade this connection to a WebSocket
+    // connection
+    ws, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        log.Println(err)
     }
 
-    fmt.Println(data)
-  }
+    log.Println("Client Connected")
+    err = ws.WriteMessage(1, []byte("Hi Client!"))
+    if err != nil {
+        log.Println(err)
+    }
+    // listen indefinitely for new messages coming
+    // through on our WebSocket connection
+    reader(ws)
+}
 
-  con.Close()
+func reader(conn *websocket.Conn) {
+    for {
+        messageType, p, err := conn.ReadMessage()
+        if err != nil {
+            log.Println(err)
+            return
+        }
+
+        fmt.Println(string(p))
+
+        if err := conn.WriteMessage(messageType, p); err != nil {
+            log.Println(err)
+            return
+        }
+
+    }
 }
