@@ -7,6 +7,8 @@ import (
     "github.com/gorilla/websocket"
 )
 
+const PORT = 8080;
+
 func homePage(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, "Home Page")
 }
@@ -17,7 +19,7 @@ func setupRoutes() {
 }
 
 func main() {
-    fmt.Println("Hello World")
+    fmt.Println("Listening on port:", PORT)
     setupRoutes()
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -28,39 +30,38 @@ var upgrader = websocket.Upgrader{
 }
 
 func wsEndpoint(w http.ResponseWriter, r *http.Request) {
-    upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+  upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
-    // upgrade this connection to a WebSocket
-    // connection
-    ws, err := upgrader.Upgrade(w, r, nil)
+  // upgrade this connection to a WebSocket
+  // connection
+  ws, err := upgrader.Upgrade(w, r, nil)
+  if err != nil {
+      log.Println(err)
+  }
+
+  defer ws.Close()
+
+  log.Println("Client Connected")
+  err = ws.WriteMessage(1, []byte("Hi Client!"))
+  if err != nil {
+      log.Println(err)
+  }
+
+  for {
+    messageType, p, err := ws.ReadMessage()
+    log.Println(messageType)
+    log.Println(p)
+
     if err != nil {
-        log.Println(err)
+      log.Println("Error:", err)
+      break
     }
 
-    log.Println("Client Connected")
-    err = ws.WriteMessage(1, []byte("Hi Client!"))
-    if err != nil {
-        log.Println(err)
+    fmt.Println(string(p))
+
+    if err := ws.WriteMessage(messageType, p); err != nil {
+      log.Println(err)
+      return
     }
-    // listen indefinitely for new messages coming
-    // through on our WebSocket connection
-    reader(ws)
-}
-
-func reader(conn *websocket.Conn) {
-    for {
-        messageType, p, err := conn.ReadMessage()
-        if err != nil {
-            log.Println(err)
-            return
-        }
-
-        fmt.Println(string(p))
-
-        if err := conn.WriteMessage(messageType, p); err != nil {
-            log.Println(err)
-            return
-        }
-
-    }
+  }
 }
