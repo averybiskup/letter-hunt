@@ -2,27 +2,34 @@ import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import { useEffect, useState } from 'react'
-import connect from '../helpers/connect'
+import { io } from 'Socket.IO-client'
+
 
 const isBrowser = typeof window !== "undefined";
 
 export default function Home() {
 
-  const [wsInstance, setWsInstance] = useState(null);
+  let socket
 
-  const url = 'ws://localhost:8080/ws'
+  const startSocket = async () => {
+    await fetch('/api/socket')
+    socket = io()
+
+    socket.on('connect', () => {
+      console.log('Sending message')
+      socket.emit('ping', 'Hello sir?')
+    })
+
+    socket.on('disconnect', () => {
+      console.log('disconnect')
+    })
+  }
 
   useEffect(() => {
-    const s = new WebSocket(url)
-
-    setWsInstance(s)
-    connect(s) 
-
-    return () => {
-      if (s?.readyState !== 3) {
-        s.close() 
-      }
+    if (isBrowser) { 
+      startSocket()
     }
+
   }, [])
 
   
