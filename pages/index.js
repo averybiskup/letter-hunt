@@ -13,7 +13,8 @@ export default function Home() {
   const url = 'ws://localhost:8080/ws'
 
   useEffect(() => {
-    const s = new WebSocket(url);
+    const s = new WebSocket(url)
+
     setWsInstance(s)
     connect(s) 
 

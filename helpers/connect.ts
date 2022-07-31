@@ -1,15 +1,13 @@
 const connect = (s: WebSocket) => {
 
-  s.onopen = function(e) {
+  s.onopen = () => {
     alert('Connected')
-    s.send('Hello jim')
   };
 
-  s.onmessage = function(event) {
+  s.onmessage = (event) => {
     alert(`[message] Data received from server: ${event.data}`);
+    s.send('Test message')
   };
-
-
 }
 
 export default connect
